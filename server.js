@@ -940,18 +940,31 @@ export function createApp(db = openDb()) {
 
   // Initiate ICICI Hosted PG Checkout (UPI / NetBanking / Cards)
   app.post('/api/customer/pay/:id/icici-checkout', C, async (req, res) => {
-    const p = db.prepare('SELECT p.*, e.product FROM payments p JOIN enrolments e ON e.id=p.enrolment_id WHERE p.id=? AND p.user_id=?').get(req.params.id, req.sid);
-    if (!p) return fail(res, 404, 'Payment not found');
-    const u = getUser(req.sid);
-    const sale = await initiateIciciSale({
-      amount: p.amount_paise / 100,
-      transactionId: p.ref,
-      customerName: u.name || 'Aurum Customer',
-      customerMobile: u.phone,
-      udf1: String(p.enrolment_id),
-      udf2: p.product,
-    });
-    res.json(sale);
+    try {
+      const p = db.prepare('SELECT p.*, e.product FROM payments p JOIN enrolments e ON e.id=p.enrolment_id WHERE p.id=? AND p.user_id=?').get(req.params.id, req.sid);
+      if (!p) return fail(res, 404, 'Payment not found');
+      const u = getUser(req.sid) || {};
+      const host = req.get('host') || 'aurum-7c7j.onrender.com';
+      const proto = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+      const returnUrl = `${proto}://${host}/api/payments/icici/response`;
+
+      const sale = await initiateIciciSale({
+        amount: p.amount_paise / 100,
+        transactionId: p.ref,
+        customerName: u.name || 'Aurum Customer',
+        customerMobile: u.phone || '9999999999',
+        returnUrl,
+        udf1: String(p.enrolment_id),
+        udf2: p.product,
+      });
+
+      if (!sale.success || !sale.redirectUrl) {
+        return fail(res, 502, sale.error || sale.rawResponse?.responseMessage || 'ICICI Gateway initialization failed');
+      }
+      res.json(sale);
+    } catch (err) {
+      fail(res, 500, err.message || 'ICICI Gateway connection error');
+    }
   });
 
   // ICICI PG Return URL (Browser redirect after payment)
