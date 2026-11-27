@@ -70,14 +70,17 @@ const closeModal = () => {
 const openModal = (html, widthClass = '') => {
   modal.innerHTML = `
     <div class="modal-card ${widthClass}">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-        <button class="icon-action-btn" id="modal-close-x" style="width:32px;height:32px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <button class="icon-action-btn" id="modal-close-x" style="width:30px;height:30px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
       ${html}
     </div>`;
   modal.classList.remove('hidden');
+  const card = modal.querySelector('.modal-card');
+  if (card) card.scrollTop = 0;
+  modal.scrollTop = 0;
   $m('#modal-close-x').onclick = closeModal;
 };
 
@@ -1211,116 +1214,105 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     const genericUpiUri = `upi://pay?${baseParams}`;
 
     openModal(`
-    <h3 style="font-size:20px;font-weight:800;color:var(--ink-deep);margin-bottom:2px">Pay ${inr(q.amount)}</h3>
-    <div class="mute" style="font-size:12px;margin-bottom:16px">Showroom UPI: <code style="color:var(--gold)">${esc(q.vpa)}</code></div>
-
-    <div class="rate-card-item" style="padding:16px;margin-bottom:16px;background:var(--bg-surface)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div>
-        <div style="font-size:11px;color:var(--ink-secondary)">Locked Rate Per Gram</div>
-        <div style="font-size:16px;font-weight:800;color:var(--ink-deep)">${inr(q.ratePerGram)}/g</div>
+        <h3 style="font-size:22px;font-weight:800;color:var(--ink-deep);margin:0">Pay ${inr(q.amount)}</h3>
+        <div class="mute" style="font-size:11.5px">Showroom: <b>MANJU JEWELLERS</b></div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:11px;color:var(--ink-secondary)">Grams Credited</div>
-        <div style="font-size:18px;font-weight:800;color:var(--gold);font-family:var(--font-mono)">${g4(q.grams)}</div>
+        <span class="pill ok" style="font-size:11px">Rate Locked</span>
       </div>
     </div>
 
-    <!-- UPI Apps Selection Grid -->
-    <div class="upi-apps-container">
-      <div class="upi-apps-label">
-        <span>Pay with UPI App</span>
-        <span style="font-size:10px;color:var(--emerald);font-weight:700">0% Gateway Fee</span>
+    <!-- Rate Info Capsule -->
+    <div class="rate-card-item" style="padding:10px 14px;margin-bottom:14px;background:var(--bg-surface)">
+      <div>
+        <div style="font-size:10.5px;color:var(--ink-secondary)">Locked Rate / Gram</div>
+        <div style="font-size:15px;font-weight:800;color:var(--ink-deep)">${inr(q.ratePerGram)}/g</div>
       </div>
-      <div class="upi-apps-grid">
-        <!-- PhonePe -->
-        <a href="${esc(phonepeUri)}" class="upi-app-card">
-          <div class="upi-app-icon-wrap" style="background:#5f259f">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.2 14.5h-2.4v-4H9.3v-2h1.5V9c0-1.65 1.35-3 3-3h1.8v2h-1.8c-.55 0-1 .45-1 1v1.5h2.8l-.4 2h-2.4v4.5z" fill="#ffffff"/></svg>
-          </div>
-          <div>
-            <div class="upi-app-name">PhonePe</div>
-            <div class="upi-app-hint">Tap to open app</div>
-          </div>
-        </a>
-
-        <!-- Google Pay -->
-        <a href="${esc(gpayUri)}" class="upi-app-card">
-          <div class="upi-app-icon-wrap" style="background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.06)">
-            <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.25 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
-          </div>
-          <div>
-            <div class="upi-app-name">Google Pay</div>
-            <div class="upi-app-hint">Tap to open app</div>
-          </div>
-        </a>
-
-        <!-- Paytm -->
-        <a href="${esc(paytmUri)}" class="upi-app-card">
-          <div class="upi-app-icon-wrap" style="background:#00b9f5">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="#ffffff"><path d="M4 8h3v8H4zm5-4h3v12H9zm5 6h3v6h-3zm5-2h3v8h-3z"/></svg>
-          </div>
-          <div>
-            <div class="upi-app-name">Paytm</div>
-            <div class="upi-app-hint">Tap to open app</div>
-          </div>
-        </a>
-
-        <!-- CRED -->
-        <a href="${esc(credUri)}" class="upi-app-card">
-          <div class="upi-app-icon-wrap" style="background:#111111">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>
-          </div>
-          <div>
-            <div class="upi-app-name">CRED UPI</div>
-            <div class="upi-app-hint">Tap to open app</div>
-          </div>
-        </a>
-      </div>
-
-      <!-- BHIM / Any other UPI -->
-      <a href="${esc(genericUpiUri)}" class="upi-bhim-card">
-        <div class="upi-app-icon-wrap" style="background:#006633;width:28px;height:28px;border-radius:6px">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        </div>
-        <div style="font-size:13px;font-weight:700;color:var(--ink-deep)">BHIM / Any Other UPI App</div>
-      </a>
-    </div>
-
-    <div class="qr-divider">Or Scan QR from any UPI App</div>
-
-    <div style="text-align:center;margin-bottom:16px">
-      <img src="/api/qr?data=${encodeURIComponent(genericUpiUri)}" width="150" height="150" style="border-radius:14px;border:1px solid var(--border-card);background:#ffffff;padding:8px">
-    </div>
-
-    <!-- Live Showroom Bank Settlement Radar -->
-    <div class="bank-radar-box">
-      <div class="radar-signal-wrapper">
-        <div class="radar-ping-ring"></div>
-        <div class="radar-center-dot"></div>
-      </div>
-      <div style="font-weight:800;font-size:15px;color:var(--ink-deep);margin-bottom:4px">
-        Awaiting Bank Settlement...
-      </div>
-      <p class="mute" style="font-size:12px;margin:0 0 10px;line-height:1.5">
-        Approve the UPI transfer in PhonePe, GPay, Paytm, or CRED. Once processed to showroom account <b style="color:var(--ink-deep)">${esc(q.vpa)}</b>, our system verifies it and credits your passbook.
-      </p>
-      <div class="radar-ref-tag">Order Reference: <code>${esc(q.ref)}</code></div>
-      <div id="st" class="mute" style="font-size:11px;text-align:center;margin-top:10px">
-        Live rate locked for <b id="cd" style="color:var(--gold)">${q.quoteValidSeconds}</b>s · Real-time bank status polling active
+      <div style="text-align:right">
+        <div style="font-size:10.5px;color:var(--ink-secondary)">Pure Gold Credited</div>
+        <div style="font-size:16px;font-weight:800;color:var(--gold);font-family:var(--font-mono)">${g4(q.grams)}</div>
       </div>
     </div>
 
-    <!-- ICICI Official Gateway Checkout Button (Real-time Bank Verification) -->
+    <!-- PRIMARY: Real ICICI Bank Gateway Button -->
     <button id="btn-icici-gateway" class="btn-save-advance" style="width:100%;padding:14px;font-size:14px;font-weight:800;background:linear-gradient(135deg, #054c8c, #0b69bc);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
       Pay via ICICI Bank Official Gateway
     </button>
 
-    <!-- Query Bank Status Button (No Mock, Real Bank Switch Check) -->
-    <button id="btn-auto-confirm" class="tray-btn ghost" style="width:100%;padding:13px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-      Check Bank Settlement Status
-    </button>
+    <!-- Secondary: Direct UPI Apps -->
+    <div class="upi-apps-container" style="margin-bottom:12px">
+      <div class="upi-apps-label" style="margin-bottom:8px">
+        <span>Or Pay directly with UPI App</span>
+        <span style="font-size:10px;color:var(--emerald);font-weight:700">0% Fee</span>
+      </div>
+      <div class="upi-apps-grid">
+        <!-- PhonePe -->
+        <a href="${esc(phonepeUri)}" class="upi-app-card" style="padding:8px 10px">
+          <div class="upi-app-icon-wrap" style="background:#5f259f;width:30px;height:30px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.2 14.5h-2.4v-4H9.3v-2h1.5V9c0-1.65 1.35-3 3-3h1.8v2h-1.8c-.55 0-1 .45-1 1v1.5h2.8l-.4 2h-2.4v4.5z" fill="#ffffff"/></svg>
+          </div>
+          <div>
+            <div class="upi-app-name" style="font-size:12.5px">PhonePe</div>
+            <div class="upi-app-hint" style="font-size:9.5px">Tap to open</div>
+          </div>
+        </a>
+
+        <!-- Google Pay -->
+        <a href="${esc(gpayUri)}" class="upi-app-card" style="padding:8px 10px">
+          <div class="upi-app-icon-wrap" style="background:#ffffff;border:1px solid #e2e8f0;width:30px;height:30px">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.25 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+          </div>
+          <div>
+            <div class="upi-app-name" style="font-size:12.5px">Google Pay</div>
+            <div class="upi-app-hint" style="font-size:9.5px">Tap to open</div>
+          </div>
+        </a>
+
+        <!-- Paytm -->
+        <a href="${esc(paytmUri)}" class="upi-app-card" style="padding:8px 10px">
+          <div class="upi-app-icon-wrap" style="background:#00b9f5;width:30px;height:30px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff"><path d="M4 8h3v8H4zm5-4h3v12H9zm5 6h3v6h-3zm5-2h3v8h-3z"/></svg>
+          </div>
+          <div>
+            <div class="upi-app-name" style="font-size:12.5px">Paytm</div>
+            <div class="upi-app-hint" style="font-size:9.5px">Tap to open</div>
+          </div>
+        </a>
+
+        <!-- CRED -->
+        <a href="${esc(credUri)}" class="upi-app-card" style="padding:8px 10px">
+          <div class="upi-app-icon-wrap" style="background:#111111;width:30px;height:30px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>
+          </div>
+          <div>
+            <div class="upi-app-name" style="font-size:12.5px">CRED UPI</div>
+            <div class="upi-app-hint" style="font-size:9.5px">Tap to open</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- QR Code Collapsible (Doesn't push screen on mobile) -->
+    <details style="margin:8px 0 14px;text-align:center">
+      <summary class="mute" style="font-size:11px;cursor:pointer;font-weight:700">📱 Scan QR code from another device</summary>
+      <div style="margin-top:10px">
+        <img src="/api/qr?data=${encodeURIComponent(genericUpiUri)}" width="130" height="130" style="border-radius:12px;border:1px solid var(--border-card);background:#ffffff;padding:6px">
+      </div>
+    </details>
+
+    <!-- Compact Status Bar -->
+    <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot-pulse"></span>
+        <span style="font-size:12px;color:var(--ink-deep);font-weight:600">Rate locked: <b id="cd" style="color:var(--gold)">${q.quoteValidSeconds}</b>s</span>
+      </div>
+      <button id="btn-auto-confirm" class="tray-btn ghost" style="padding:6px 12px;font-size:11.5px">
+        Refresh Status
+      </button>
+    </div>
     `);
 
     let pollIv = null;

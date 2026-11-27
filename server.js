@@ -957,9 +957,6 @@ export function createApp(db = openDb()) {
         customerName: u.name || 'Aurum Customer',
         customerMobile: u.phone || '9999999999',
         returnUrl,
-        udf1: String(p.enrolment_id),
-        udf2: p.product,
-        udf3: p.ref,
       });
 
       if (!sale.success || !sale.redirectUrl) {
