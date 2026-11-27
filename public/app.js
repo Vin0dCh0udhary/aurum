@@ -1313,22 +1313,22 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     </div>
 
     <!-- PRIMARY: Universal Pay via UPI App -->
-    <a href="${esc(genericUpiUri)}" class="btn-save-advance" style="width:100%;padding:14px;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;text-decoration:none">
+    <a href="${esc(genericUpiUri)}" class="btn-save-advance" style="width:100%;padding:14px;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;text-decoration:none">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
       Pay ${inr(q.amount)} via UPI App
     </a>
 
-    <!-- Secondary: Direct UPI Apps -->
+    <!-- Direct UPI Apps with Official Logos -->
     <div class="upi-apps-container" style="margin-bottom:12px">
       <div class="upi-apps-label" style="margin-bottom:8px">
-        <span>Choose your UPI App</span>
+        <span>Or Tap your UPI App</span>
         <span style="font-size:10px;color:var(--emerald);font-weight:700">0% Fee</span>
       </div>
       <div class="upi-apps-grid">
         <!-- PhonePe -->
         <a href="${esc(phonepeUri)}" class="upi-app-card" style="padding:8px 10px">
-          <div class="upi-app-icon-wrap" style="background:#5f259f;width:30px;height:30px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.2 14.5h-2.4v-4H9.3v-2h1.5V9c0-1.65 1.35-3 3-3h1.8v2h-1.8c-.55 0-1 .45-1 1v1.5h2.8l-.4 2h-2.4v4.5z" fill="#ffffff"/></svg>
+          <div class="upi-app-icon-wrap" style="background:#5f259f;width:32px;height:32px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px">
+            <img src="/logos/phonepe.png" width="30" height="30" style="object-fit:contain;display:block">
           </div>
           <div>
             <div class="upi-app-name" style="font-size:12.5px">PhonePe</div>
@@ -1338,8 +1338,8 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
 
         <!-- Google Pay -->
         <a href="${esc(gpayUri)}" class="upi-app-card" style="padding:8px 10px">
-          <div class="upi-app-icon-wrap" style="background:#ffffff;border:1px solid #e2e8f0;width:30px;height:30px">
-            <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.25 21.36 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/></svg>
+          <div class="upi-app-icon-wrap" style="background:#ffffff;border:1px solid #e2e8f0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px">
+            <img src="/logos/gpay.png" width="28" height="28" style="object-fit:contain;display:block">
           </div>
           <div>
             <div class="upi-app-name" style="font-size:12.5px">Google Pay</div>
@@ -1349,8 +1349,8 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
 
         <!-- Paytm -->
         <a href="${esc(paytmUri)}" class="upi-app-card" style="padding:8px 10px">
-          <div class="upi-app-icon-wrap" style="background:#00b9f5;width:30px;height:30px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff"><path d="M4 8h3v8H4zm5-4h3v12H9zm5 6h3v6h-3zm5-2h3v8h-3z"/></svg>
+          <div class="upi-app-icon-wrap" style="background:#00b9f5;width:32px;height:32px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px">
+            <img src="/logos/paytm.jpg" width="30" height="30" style="object-fit:contain;display:block">
           </div>
           <div>
             <div class="upi-app-name" style="font-size:12.5px">Paytm</div>
@@ -1360,24 +1360,45 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
 
         <!-- CRED -->
         <a href="${esc(credUri)}" class="upi-app-card" style="padding:8px 10px">
-          <div class="upi-app-icon-wrap" style="background:#111111;width:30px;height:30px">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14"/></svg>
+          <div class="upi-app-icon-wrap" style="background:#111111;width:32px;height:32px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px">
+            <img src="/logos/cred.png" width="28" height="28" style="object-fit:contain;display:block">
           </div>
           <div>
-            <div class="upi-app-name" style="font-size:12.5px">CRED UPI</div>
+            <div class="upi-app-name" style="font-size:12.5px">CRED</div>
             <div class="upi-app-hint" style="font-size:9.5px">Tap to open</div>
           </div>
         </a>
       </div>
     </div>
 
-    <!-- QR Code Collapsible (Doesn't push screen on mobile) -->
-    <details style="margin:8px 0 14px;text-align:center">
-      <summary class="mute" style="font-size:11px;cursor:pointer;font-weight:700">📱 Scan QR code from another device</summary>
-      <div style="margin-top:10px">
-        <img src="/api/qr?data=${encodeURIComponent(genericUpiUri)}" width="130" height="130" style="border-radius:12px;border:1px solid var(--border-card);background:#ffffff;padding:6px">
+    <!-- Scan Dynamic QR Code (Bypasses PhonePe Browser Security Filter) -->
+    <div style="text-align:center;background:#ffffff;border:1px solid var(--border-card);border-radius:16px;padding:12px;margin-bottom:12px">
+      <img src="/api/qr?data=${encodeURIComponent(genericUpiUri)}" width="145" height="145" style="display:block;margin:0 auto;border-radius:8px">
+      <div style="font-size:11.5px;font-weight:700;color:var(--ink-deep);margin-top:6px">Scan with PhonePe, GPay, or Paytm Scanner</div>
+      <div class="mute" style="font-size:10px;margin-top:2px">Take screenshot and open in PhonePe scanner, or scan directly</div>
+    </div>
+
+    <!-- Copy UPI ID directly (For PhonePe "To UPI ID" transfer) -->
+    <div style="background:var(--bg-surface);border:1.5px solid var(--border-light);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="overflow:hidden">
+        <div style="font-size:10px;color:var(--ink-secondary)">Pay via 'To UPI ID' in PhonePe / GPay</div>
+        <div style="font-size:13px;font-weight:800;color:var(--forest);font-family:var(--font-mono);word-break:break-all">${esc(q.vpa)}</div>
       </div>
-    </details>
+      <button id="btn-copy-vpa" class="tray-btn ghost" style="padding:6px 12px;font-size:11px;font-weight:700;white-space:nowrap">
+        Copy UPI ID
+      </button>
+    </div>
+
+    <!-- Enter UTR if paid directly -->
+    <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--ink-deep);margin-bottom:4px">
+        Already paid? Enter 12-digit Bank UTR / Reference:
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="manual-utr" inputmode="numeric" maxlength="12" placeholder="12-digit UTR from payment receipt" style="flex:1;font-family:var(--font-mono);font-size:13px;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--border-card)">
+        <button id="manual-sub-btn" class="btn-save-advance" style="padding:8px 14px;font-size:12px;white-space:nowrap">Verify &amp; Credit</button>
+      </div>
+    </div>
 
     <!-- Compact Status Bar -->
     <div style="background:var(--bg-surface);border:1px solid var(--border-light);border-radius:var(--radius-md);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1388,6 +1409,7 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
       <button id="btn-auto-confirm" class="tray-btn ghost" style="padding:6px 12px;font-size:11.5px">
         Refresh Status
       </button>
+    </div>
     </div>
     `);
 
@@ -1461,6 +1483,30 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     };
 
     $m('#btn-auto-confirm')?.addEventListener('click', guard(triggerAutoConfirm));
+
+    // One-Tap Copy Showroom UPI ID
+    $m('#btn-copy-vpa')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(q.vpa).catch(() => {});
+      toast(`Copied ${q.vpa}! In PhonePe/GPay: tap 'To UPI ID' and paste to pay.`, 'success');
+    });
+
+    // Manual UTR Submission fallback
+    $m('#manual-sub-btn')?.addEventListener('click', guard(async () => {
+      const utr = ($m('#manual-utr')?.value || '').trim();
+      if (!/^\d{12}$/.test(utr)) return toast('Please enter a valid 12-digit UTR from your bank app', 'error');
+      const b = $m('#manual-sub-btn');
+      b.disabled = true;
+      b.textContent = 'Verifying...';
+      try {
+        const res = await api('POST', `/api/customer/pay/${q.id}/submit`, { utr });
+        toast('Bank reference submitted! Crediting pure metal...', 'success');
+        const st = await api('GET', `/api/customer/pay/${q.id}`);
+        onConfirmedSuccess(st);
+      } finally {
+        b.disabled = false;
+        b.textContent = 'Verify & Credit';
+      }
+    }));
   };
 
   if (directLock && defAmt) {
