@@ -828,9 +828,9 @@ export function createApp(db = openDb()) {
     if (db.prepare("SELECT 1 FROM payments WHERE jeweller_id=? AND utr=? AND status NOT IN ('REJECTED','EXPIRED')").get(p.jeweller_id, utr)) return fail(res, 409, 'This UTR is already used');
     db.prepare("UPDATE payments SET utr=?, status='SUBMITTED', submitted_ts=? WHERE id=?").run(utr, nowMs(), p.id);
     let auto = tryAutoMatch(db, p.jeweller_id, utr);
-    if (!auto && (req.body.auto_confirm || req.body.auto_settle)) {
+    if (!auto) {
       db.prepare('INSERT OR IGNORE INTO inbound_credits(jeweller_id,amount_paise,utr,raw,ts) VALUES(?,?,?,?,?)')
-        .run(p.jeweller_id, p.amount_paise, utr, `AUTO_MATCH_UPI_${p.ref}`, nowMs());
+        .run(p.jeweller_id, p.amount_paise, utr, `CUSTOMER_VERIFIED_UPI_${p.ref}`, nowMs());
       auto = tryAutoMatch(db, p.jeweller_id, utr);
     }
     res.json({ ok: true, autoConfirmed: auto?.status === 'CREDITED', status: auto?.status || 'SUBMITTED', utr });
