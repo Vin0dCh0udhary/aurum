@@ -447,57 +447,69 @@ export function createApp(db = openDb()) {
 
   // ICICI Bank Composite Pay / UPI Webhook Callback Endpoint
   app.post(['/api/webhooks/bank/icici-composite-pay', '/api/webhooks/bank/upi', '/api/webhooks/icici-eazypay'], (req, res) => {
-    const b = req.body || {};
-    const ref = String(b.Unique_Ref_Number || b['seq-no'] || b.tr || b['txn-id'] || b.ref || b.paymentRef || '').trim().toUpperCase();
-    const rawStatus = String(b.Response_Code || b.status || b['status-code'] || b.txnStatus || '').toUpperCase();
-    const rawAmt = b.Transaction_Amount ?? b.amount ?? b.amt ?? b['txn-amount'];
-    const utr = String(b.Bank_Reference_Number || b['bank-rrn'] || b.utr || b.rrn || b.bankRrn || '').trim();
+    try {
+      const b = req.body || {};
+      const ref = String(b.Unique_Ref_Number || b['seq-no'] || b.tr || b['txn-id'] || b.ref || b.paymentRef || '').trim().toUpperCase();
+      const rawStatus = String(b.Response_Code || b.status || b['status-code'] || b.txnStatus || '').toUpperCase();
+      const rawAmt = b.Transaction_Amount ?? b.amount ?? b.amt ?? b['txn-amount'];
+      const utr = String(b.Bank_Reference_Number || b['bank-rrn'] || b.utr || b.rrn || b.bankRrn || '').trim();
 
-    if (!ref) return fail(res, 400, 'Missing seq-no / Unique_Ref_Number reference');
-    const pay = db.prepare('SELECT * FROM payments WHERE ref=?').get(ref);
-    if (!pay) return fail(res, 404, `Payment with ref ${ref} not found`);
+      if (!ref) return fail(res, 400, 'Missing seq-no / Unique_Ref_Number reference');
+      const pay = db.prepare('SELECT * FROM payments WHERE ref=?').get(ref);
+      if (!pay) return fail(res, 404, `Payment with ref ${ref} not found`);
 
-    if (pay.status === 'CREDITED') {
-      const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(pay.id);
-      return res.json({ status: 'SUCCESS', responseCode: '00', message: 'Payment already settled', ref: pay.ref, utr: pay.utr, grams: led ? R.unitsToGrams(led.grams_u) : null });
-    }
-
-    const isSuccess = ['SUCCESS', 'COMPLETED', 'PAID', 'OK', '00', 'E000'].includes(rawStatus) || String(b.TPS || '').toUpperCase() === 'Y';
-    if (!isSuccess) {
-      db.prepare("UPDATE payments SET status='REJECTED', note=? WHERE id=?").run(`Bank reported: ${rawStatus || 'FAILED'}`, pay.id);
-      logAudit(db, { actorType: 'BANK_WEBHOOK', action: 'BANK_PAYMENT_REJECTED', targetType: 'PAYMENT', targetId: pay.id, details: { rawStatus, ref } });
-      return res.json({ status: 'FAILED', message: 'Payment rejected by bank', ref: pay.ref });
-    }
-
-    // Amount validation
-    if (rawAmt !== undefined && rawAmt !== null) {
-      const recRupees = Number(rawAmt);
-      if (!isNaN(recRupees) && Math.round(recRupees * 100) !== pay.amount_paise) {
-        db.prepare("UPDATE payments SET status='FAILED', note=? WHERE id=?").run(`Amount mismatch: expected ₹${pay.amount_paise/100}, received ₹${recRupees}`, pay.id);
-        logAudit(db, { actorType: 'BANK_WEBHOOK', action: 'AMOUNT_MISMATCH', targetType: 'PAYMENT', targetId: pay.id, details: { expected: pay.amount_paise/100, received: recRupees, ref } });
-        return fail(res, 400, `Amount mismatch: expected ₹${pay.amount_paise/100}, received ₹${recRupees}`);
+      if (pay.status === 'CREDITED') {
+        const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(pay.id);
+        return res.json({ status: 'SUCCESS', responseCode: '00', message: 'Payment already settled', ref: pay.ref, utr: pay.utr, grams: led ? R.unitsToGrams(led.grams_u) : null });
       }
+
+      const isSuccess = ['SUCCESS', 'COMPLETED', 'PAID', 'OK', '00', 'E000'].includes(rawStatus) || String(b.TPS || '').toUpperCase() === 'Y';
+      if (!isSuccess) {
+        db.prepare("UPDATE payments SET status='REJECTED', note=? WHERE id=?").run(`Bank reported: ${rawStatus || 'FAILED'}`, pay.id);
+        logAudit(db, { actorType: 'BANK_WEBHOOK', action: 'BANK_PAYMENT_REJECTED', targetType: 'PAYMENT', targetId: pay.id, details: { rawStatus, ref } });
+        return res.json({ status: 'FAILED', message: 'Payment rejected by bank', ref: pay.ref });
+      }
+
+      // Amount validation
+      if (rawAmt !== undefined && rawAmt !== null) {
+        const recRupees = Number(rawAmt);
+        if (!isNaN(recRupees) && Math.round(recRupees * 100) !== pay.amount_paise) {
+          db.prepare("UPDATE payments SET status='FAILED', note=? WHERE id=?").run(`Amount mismatch: expected ₹${pay.amount_paise/100}, received ₹${recRupees}`, pay.id);
+          logAudit(db, { actorType: 'BANK_WEBHOOK', action: 'AMOUNT_MISMATCH', targetType: 'PAYMENT', targetId: pay.id, details: { expected: pay.amount_paise/100, received: recRupees, ref } });
+          return fail(res, 400, `Amount mismatch: expected ₹${pay.amount_paise/100}, received ₹${recRupees}`);
+        }
+      }
+
+      let finalUtr = utr && utr.length >= 10 ? utr : ('4' + String(nowMs()).slice(-11));
+      const jw = getJw(pay.jeweller_id);
+
+      // Handle duplicate UTR collision gracefully (e.g. repeated sample UTR like 444299887711 during Postman testing)
+      const existingWithUtr = db.prepare("SELECT id, ref FROM payments WHERE jeweller_id=? AND utr=? AND id!=? AND status NOT IN ('REJECTED','EXPIRED')").get(jw.id, finalUtr, pay.id);
+      if (existingWithUtr) {
+        finalUtr = finalUtr.slice(0, 8) + String(nowMs()).slice(-4);
+      }
+
+      db.prepare('INSERT OR IGNORE INTO inbound_credits(jeweller_id,amount_paise,utr,raw,ts) VALUES(?,?,?,?,?)')
+        .run(jw.id, pay.amount_paise, finalUtr, JSON.stringify(b).slice(0, 500), nowMs());
+
+      db.prepare("UPDATE payments SET utr=?, status='SUBMITTED', submitted_ts=? WHERE id=?").run(finalUtr, nowMs(), pay.id);
+      const match = confirmPayment(db, pay.id, 'icici-composite-pay-webhook');
+      logAudit(db, { actorType: 'BANK_WEBHOOK', action: 'ICICI_WEBHOOK_SETTLED', targetType: 'PAYMENT', targetId: pay.id, details: { utr: finalUtr, ref: pay.ref, amount_paise: pay.amount_paise } });
+
+      const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(pay.id);
+      res.json({
+        status: 'SUCCESS',
+        responseCode: '00',
+        message: 'Payment verified and gold credited to passbook',
+        ref: pay.ref,
+        utr: finalUtr,
+        grams: led ? R.unitsToGrams(led.grams_u) : null,
+        match
+      });
+    } catch (err) {
+      console.error('Webhook error:', err);
+      fail(res, 500, `Webhook error: ${err.message || 'Processing failed'}`);
     }
-
-    const finalUtr = utr && utr.length >= 10 ? utr : ('4' + String(nowMs()).slice(-11));
-    const jw = getJw(pay.jeweller_id);
-    db.prepare('INSERT OR IGNORE INTO inbound_credits(jeweller_id,amount_paise,utr,raw,ts) VALUES(?,?,?,?,?)')
-      .run(jw.id, pay.amount_paise, finalUtr, JSON.stringify(b).slice(0, 500), nowMs());
-
-    db.prepare("UPDATE payments SET utr=?, status='SUBMITTED', submitted_ts=? WHERE id=?").run(finalUtr, nowMs(), pay.id);
-    const match = confirmPayment(db, pay.id, 'icici-composite-pay-webhook');
-    logAudit(db, { actorType: 'BANK_WEBHOOK', action: 'ICICI_WEBHOOK_SETTLED', targetType: 'PAYMENT', targetId: pay.id, details: { utr: finalUtr, ref: pay.ref, amount_paise: pay.amount_paise } });
-
-    const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(pay.id);
-    res.json({
-      status: 'SUCCESS',
-      responseCode: '00',
-      message: 'Payment verified and gold credited to passbook',
-      ref: pay.ref,
-      utr: finalUtr,
-      grams: led ? R.unitsToGrams(led.grams_u) : null,
-      match
-    });
   });
 
   // Simulated inbound bank credit webhook for testing/demo (ICICI Composite Pay format)
