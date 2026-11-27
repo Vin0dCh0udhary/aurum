@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.8">
+  <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body>
   <!-- Continuous Moving Live Commodity Ticker Stripe -->
@@ -41,8 +41,8 @@
           </div>
         </div>
 
-        <nav class="desktop-nav-links" id="desktop-nav">
-          <button class="nav-link active" data-tab="home">Dashboard</button>
+        <nav class="desktop-nav-links hidden" id="desktop-nav">
+          <button class="nav-link active" data-tab="home">Save</button>
           <button class="nav-link" data-tab="schemes">Plans</button>
           <button class="nav-link" data-tab="rates">Live Rates</button>
           <button class="nav-link" data-tab="ledger">Passbook</button>
@@ -58,7 +58,22 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
             <span>Sign Out</span>
           </button>
+          <!-- Mobile 3-line Hamburger Menu Button -->
+          <button class="mobile-hamburger-btn" id="btn-mobile-menu" aria-label="Toggle navigation menu" style="display:none">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </button>
         </div>
+      </div>
+
+      <!-- Mobile Dropdown Navigation Drawer -->
+      <div class="mobile-dropdown-menu hidden" id="mobile-menu-drawer">
+        <div class="mobile-menu-showroom" id="mobile-showroom-box" style="display:none">
+          <div style="font-size:11px;color:var(--ink-secondary);margin-bottom:2px">Showroom</div>
+          <div id="mobile-showroom-name" style="font-weight:800;color:var(--ink-deep)"></div>
+        </div>
+        <nav class="mobile-menu-links" id="mobile-menu-links"></nav>
       </div>
     </header>
 
@@ -78,6 +93,6 @@
   <!-- Bottom Sheet / Modal Overlay -->
   <div id="modal" class="modal-overlay hidden"></div>
 
-  <script src="app.js?v=3.3" type="module"></script>
+  <script src="app.js?v=4.0" type="module"></script>
 </body>
 </html>

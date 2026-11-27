@@ -812,7 +812,7 @@ export function createApp(db = openDb()) {
     const rate = R.customerRate(e.product, spot, jw); const ref = 'GS' + makeToken().slice(0, 8).toUpperCase();
     const r = db.prepare('INSERT INTO payments(ref,enrolment_id,user_id,jeweller_id,amount_paise,quote_rate_paise,quote_ts,quote_expires,created_ts) VALUES(?,?,?,?,?,?,?,?,?)')
       .run(ref, e.id, u.id, e.jeweller_id, amt * 100, rate.inclPaise, spot.ts, nowMs() + S.QUOTE_TTL_MS, nowMs());
-    const upi = `upi://pay?pa=${encodeURIComponent(jw.upi_vpa)}&pn=${encodeURIComponent(jw.shop_name)}&am=${amt.toFixed(2)}&cu=INR&tn=${ref}&tr=${ref}&mc=5944`;
+    const upi = `upi://pay?pa=${encodeURIComponent(jw.upi_vpa)}&pn=${encodeURIComponent(jw.shop_name)}&am=${amt.toFixed(2)}&cu=INR&tn=${ref}`;
     res.json({ id: Number(r.lastInsertRowid), ref, upi, vpa: jw.upi_vpa, amount: amt, ratePerGram: rupees(rate.inclPaise), grams: R.unitsToGrams(R.gramsUnits(amt * 100, rate.inclPaise)),
       quoteValidSeconds: S.QUOTE_TTL_MS / 1000, marketOpen: marketOpen(nowMs()), nextOpen: marketOpen(nowMs()) ? null : nextOpenLabel(nowMs()), gstIncluded: jw.gst_mode !== 'COMPOSITION' });
   });

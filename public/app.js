@@ -1,6 +1,7 @@
 const $ = (s) => document.querySelector(s);
 const $m = (s) => document.querySelector('#modal ' + s);
 const app = $('#app'), modal = $('#modal'), bNav = $('#bottom-nav'), dNav = $('#desktop-nav');
+const mDrawer = $('#mobile-menu-drawer'), mBtn = $('#btn-mobile-menu'), mLinks = $('#mobile-menu-links');
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const inr = (n) => '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 const g4 = (n) => Number(n).toFixed(4) + ' g';
@@ -10,6 +11,27 @@ const when = (ms) => {
   const d = new Date(n);
   return isNaN(d.getTime()) ? '–' : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
 };
+
+function closeMobileMenu() {
+  if (mDrawer) mDrawer.classList.add('hidden');
+  if (mBtn) mBtn.classList.remove('is-active');
+}
+function toggleMobileMenu() {
+  if (!mDrawer) return;
+  const isHidden = mDrawer.classList.contains('hidden');
+  if (isHidden) {
+    mDrawer.classList.remove('hidden');
+    mBtn?.classList.add('is-active');
+  } else {
+    closeMobileMenu();
+  }
+}
+if (mBtn) mBtn.onclick = toggleMobileMenu;
+document.addEventListener('click', (e) => {
+  if (mDrawer && !mDrawer.classList.contains('hidden') && !mDrawer.contains(e.target) && !mBtn?.contains(e.target)) {
+    closeMobileMenu();
+  }
+});
 
 let cfg, session = JSON.parse(localStorage.getItem('session') || 'null'), timer;
 let activeTab = 'home'; // customer: home | schemes | rates | ledger | profile; jeweller: today | customers | ledger | staff | setup
@@ -56,7 +78,10 @@ function logout() {
   session = null;
   localStorage.removeItem('session');
   clearInterval(timer);
+  closeMobileMenu();
+  if (mBtn) mBtn.style.display = 'none';
   bNav.classList.add('hidden');
+  dNav.classList.add('hidden');
   dNav.style.display = 'none';
   $('#hdr-showroom-badge').style.display = 'none';
   landing();
@@ -136,8 +161,11 @@ async function showLegal(type) {
 
 // ---------------- Landing & Role Gate ----------------
 function landing() {
+  closeMobileMenu();
+  if (mBtn) mBtn.style.display = 'none';
   $('#btn-logout').style.display = 'none';
   bNav.classList.add('hidden');
+  dNav.classList.add('hidden');
   dNav.style.display = 'none';
   $('#hdr-showroom-badge').style.display = 'none';
   clearInterval(timer);
@@ -230,8 +258,11 @@ function renderLandingRatesGrid(rates) {
 
 // ---------------- Mobile Verification (OTP) ----------------
 function login(role) {
+  closeMobileMenu();
+  if (mBtn) mBtn.style.display = 'none';
   $('#btn-logout').style.display = 'none';
   bNav.classList.add('hidden');
+  dNav.classList.add('hidden');
   dNav.style.display = 'none';
   $('#hdr-showroom-badge').style.display = 'none';
 
@@ -352,7 +383,7 @@ async function customer() {
   } else {
     $('#hdr-showroom-badge').style.display = 'none';
   }
-  renderNavigations();
+  renderNavigations(me);
   renderCustomerView(me);
 
   autoRefresh(async () => {
@@ -362,11 +393,12 @@ async function customer() {
   });
 }
 
-function renderNavigations() {
+function renderNavigations(me) {
   // Desktop Nav Links
-  dNav.style.display = 'flex';
+  dNav.classList.remove('hidden');
+  dNav.style.display = '';
   dNav.innerHTML = `
-    <button class="nav-link ${activeTab === 'home' ? 'active' : ''}" data-tab="home">Dashboard</button>
+    <button class="nav-link ${activeTab === 'home' ? 'active' : ''}" data-tab="home">Save</button>
     <button class="nav-link ${activeTab === 'schemes' ? 'active' : ''}" data-tab="schemes">Plans</button>
     <button class="nav-link ${activeTab === 'rates' ? 'active' : ''}" data-tab="rates">Live Rates</button>
     <button class="nav-link ${activeTab === 'ledger' ? 'active' : ''}" data-tab="ledger">Passbook</button>
@@ -376,11 +408,56 @@ function renderNavigations() {
     b.onclick = () => { activeTab = b.dataset.tab; customer(); };
   });
 
+  // Mobile Hamburger Menu Drawer
+  if (mBtn) mBtn.style.display = 'flex';
+  if (mLinks) {
+    if (me?.jeweller?.shop_name) {
+      const sBox = $('#mobile-showroom-box');
+      if (sBox) {
+        sBox.style.display = 'block';
+        $('#mobile-showroom-name').textContent = me.jeweller.shop_name;
+      }
+    }
+    mLinks.innerHTML = `
+      <button class="mobile-nav-item ${activeTab === 'home' ? 'active' : ''}" data-mtab="home">
+        <span>Save</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'schemes' ? 'active' : ''}" data-mtab="schemes">
+        <span>Plans</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'rates' ? 'active' : ''}" data-mtab="rates">
+        <span>Live Rates</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'ledger' ? 'active' : ''}" data-mtab="ledger">
+        <span>Passbook</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'profile' ? 'active' : ''}" data-mtab="profile">
+        <span>Profile</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item signout" id="mobile-btn-logout">
+        <span style="display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Sign Out
+        </span>
+      </button>
+    `;
+    mLinks.querySelectorAll('[data-mtab]').forEach(b => {
+      b.onclick = () => { closeMobileMenu(); activeTab = b.dataset.mtab; customer(); };
+    });
+    const mOut = $('#mobile-btn-logout');
+    if (mOut) mOut.onclick = () => { closeMobileMenu(); logout(); };
+  }
+
   // Mobile Bottom Nav
   bNav.classList.remove('hidden');
   const tabs = [
-    { id: 'home', label: 'Overview', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>` },
-    { id: 'schemes', label: 'Schemes', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>` },
+    { id: 'home', label: 'Save', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>` },
+    { id: 'schemes', label: 'Plans', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>` },
     { id: 'rates', label: 'Rates', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>` },
     { id: 'ledger', label: 'Passbook', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>` },
     { id: 'profile', label: 'Profile', icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>` },
@@ -506,8 +583,8 @@ function renderCustomerOverview(me) {
       </div>
 
       <div class="tray-buttons-row">
-        <button class="tray-btn ghost" id="tray-passbook-btn">View Passbook</button>
-        <button class="tray-btn primary" id="tray-save-btn">+ Save (New Plan)</button>
+        <button class="tray-btn ghost" id="tray-passbook-btn">Passbook</button>
+        <button class="tray-btn primary" id="tray-save-btn">+ Save</button>
       </div>
     </div>
 
@@ -516,7 +593,7 @@ function renderCustomerOverview(me) {
       <div class="board-header">
         <span class="board-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-          Live Bullion Rates
+          Live Rates
         </span>
         <span class="pill ok">${me.rates?.marketOpen ? 'Live Market' : 'Quoting Active'}</span>
       </div>
@@ -534,21 +611,20 @@ function renderCustomerOverview(me) {
   <div class="hero-actions-row">
     <button class="btn-save-advance" id="hero-save-btn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      Save (Configure Metal &amp; Plan)
+      Save
     </button>
     <button class="btn-redeem-goods" id="hero-redeem-btn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line></svg>
-      Redeem Physical Goods
+      Redeem
     </button>
   </div>
 
   <!-- Asset Allocation & Holdings Matrix -->
   <div class="section-heading-row" style="margin-top:30px">
     <div>
-      <span class="section-heading">Precious Metals Asset Allocation</span>
-      <div class="mute" style="font-size:12px;margin-top:2px">Exact weight, rupee deposits, and live showroom value per asset</div>
+      <span class="section-heading">Holdings</span>
     </div>
-    <span class="pill ok">Segregated Holdings</span>
+    <span class="pill ok">Segregated</span>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-bottom:28px">
     ${assetCardsHtml}
@@ -558,9 +634,9 @@ function renderCustomerOverview(me) {
   <div class="section-heading-row">
     <span class="section-heading">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-      Savings Plan Roadmap &amp; Milestones
+      Active Schemes
     </span>
-    <span class="pill ok">${enrs.length} Active Scheme(s)</span>
+    <span class="pill ok">${enrs.length} Active</span>
   </div>
 
   <div class="scheme-progress-card">
@@ -1206,7 +1282,7 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     const q = await api('POST', '/api/customer/pay', { enrolment_id: enrolmentId, amount_rupees: amount });
     const exp = Date.now() + q.quoteValidSeconds * 1000;
 
-    const baseParams = `pa=${encodeURIComponent(q.vpa)}&pn=${encodeURIComponent('MANJU JEWELLERS')}&am=${Number(q.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(q.ref)}&tr=${encodeURIComponent(q.ref)}&mc=5944`;
+    const baseParams = `pa=${encodeURIComponent(q.vpa)}&pn=${encodeURIComponent('MANJU JEWELLERS')}&am=${Number(q.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(q.ref)}`;
     const phonepeUri = `phonepe://pay?${baseParams}`;
     const gpayUri = `gpay://upi/pay?${baseParams}`;
     const paytmUri = `paytmmp://pay?${baseParams}`;
@@ -1236,16 +1312,16 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
       </div>
     </div>
 
-    <!-- PRIMARY: Real ICICI Bank Gateway Button -->
-    <button id="btn-icici-gateway" class="btn-save-advance" style="width:100%;padding:14px;font-size:14px;font-weight:800;background:linear-gradient(135deg, #054c8c, #0b69bc);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
-      Pay via ICICI Bank Official Gateway
-    </button>
+    <!-- PRIMARY: Universal Pay via UPI App -->
+    <a href="${esc(genericUpiUri)}" class="btn-save-advance" style="width:100%;padding:14px;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;text-decoration:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      Pay ${inr(q.amount)} via UPI App
+    </a>
 
     <!-- Secondary: Direct UPI Apps -->
     <div class="upi-apps-container" style="margin-bottom:12px">
       <div class="upi-apps-label" style="margin-bottom:8px">
-        <span>Or Pay directly with UPI App</span>
+        <span>Choose your UPI App</span>
         <span style="font-size:10px;color:var(--emerald);font-weight:700">0% Fee</span>
       </div>
       <div class="upi-apps-grid">
@@ -1357,26 +1433,6 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
         }
       } catch {}
     }, 1500);
-
-    // ICICI Bank Hosted Gateway Launch (Real Bank Switch)
-    $m('#btn-icici-gateway')?.addEventListener('click', guard(async () => {
-      const btn = $m('#btn-icici-gateway');
-      btn.disabled = true;
-      btn.innerHTML = `<span class="dot-pulse"></span> Connecting ICICI Bank Gateway...`;
-      try {
-        const res = await api('POST', `/api/customer/pay/${q.id}/icici-checkout`);
-        if (res && res.redirectUrl) {
-          window.location.href = res.redirectUrl;
-          return;
-        }
-        toast('Could not connect to ICICI Gateway: ' + (res.error || 'Server error'), 'error');
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg> Pay via ICICI Bank Official Gateway`;
-        }
-      }
-    }));
 
     // Real-Time Bank Status Verification (No Mocks, Live Bank Switch Query)
     const triggerAutoConfirm = async () => {
@@ -1617,7 +1673,8 @@ async function jeweller() {
 }
 
 function renderJewellerNavigations() {
-  dNav.style.display = 'flex';
+  dNav.classList.remove('hidden');
+  dNav.style.display = '';
   dNav.innerHTML = `
     <button class="nav-link ${activeTab === 'today' ? 'active' : ''}" data-jtab="today">Overview</button>
     <button class="nav-link ${activeTab === 'customers' ? 'active' : ''}" data-jtab="customers">Customers</button>
@@ -1628,6 +1685,44 @@ function renderJewellerNavigations() {
   dNav.querySelectorAll('[data-jtab]').forEach(b => {
     b.onclick = () => { activeTab = b.dataset.jtab; jeweller(); };
   });
+
+  // Mobile Hamburger Menu Drawer for Jeweller
+  if (mBtn) mBtn.style.display = 'flex';
+  if (mLinks) {
+    mLinks.innerHTML = `
+      <button class="mobile-nav-item ${activeTab === 'today' ? 'active' : ''}" data-mjtab="today">
+        <span>Overview</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'customers' ? 'active' : ''}" data-mjtab="customers">
+        <span>Customers</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'ledger' ? 'active' : ''}" data-mjtab="ledger">
+        <span>Ledger</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'staff' ? 'active' : ''}" data-mjtab="staff">
+        <span>Staff Board</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item ${activeTab === 'setup' ? 'active' : ''}" data-mjtab="setup">
+        <span>Setup & Invites</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+      <button class="mobile-nav-item signout" id="mobile-jw-logout">
+        <span style="display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Sign Out
+        </span>
+      </button>
+    `;
+    mLinks.querySelectorAll('[data-mjtab]').forEach(b => {
+      b.onclick = () => { closeMobileMenu(); activeTab = b.dataset.mjtab; jeweller(); };
+    });
+    const jwOut = $('#mobile-jw-logout');
+    if (jwOut) jwOut.onclick = () => { closeMobileMenu(); logout(); };
+  }
 
   bNav.classList.remove('hidden');
   const tabs = [
@@ -2239,7 +2334,19 @@ function jwRegister() {
 
 // ---------------- Boot ----------------
 function start() {
-  session?.role === 'customer' ? guard(customer)() : session?.role === 'jeweller' ? guard(jeweller)() : landing();
+  if (session?.role === 'customer') {
+    customer().catch((e) => {
+      console.warn('Customer session failed, returning to landing:', e);
+      landing();
+    });
+  } else if (session?.role === 'jeweller') {
+    jeweller().catch((e) => {
+      console.warn('Jeweller session failed, returning to landing:', e);
+      landing();
+    });
+  } else {
+    landing();
+  }
 }
 
 (async () => {
