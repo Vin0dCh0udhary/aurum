@@ -996,5 +996,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   R.setOnTick((s) => db.prepare('INSERT INTO rate_history VALUES(?,?,?,?,?)').run(s.ts, s.xau, s.xag, s.usdinr, s.source));
   R.start(10000);
   const port = process.env.PORT || 3000;
-  createApp(db).listen(port, () => console.log(`Gold scheme MVP on http://localhost:${port}  (DEV=${process.env.DEV === '1'} MOCK_RATES=${process.env.MOCK_RATES === '1'})`));
+  createApp(db).listen(port, '0.0.0.0', () => console.log(`Gold scheme MVP running on http://0.0.0.0:${port} (DEV=${process.env.DEV === '1'} MOCK_RATES=${process.env.MOCK_RATES === '1'})`));
 }

@@ -9,6 +9,6 @@
     "dev": "DEV=1 MOCK_RATES=1 node server.js",
     "test": "node --test --no-warnings"
   },
-  "engines": { "node": ">=22.5" },
+  "engines": { "node": "22.x" },
   "dependencies": { "express": "^4.19.2", "qrcode": "^1.5.4" }
 }
