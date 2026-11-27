@@ -948,18 +948,23 @@ export function createApp(db = openDb()) {
       const proto = req.protocol === 'https' || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
       const returnUrl = `${proto}://${host}/api/payments/icici/response`;
 
+      // ICICI requires a strictly unique merchant reference number per attempt
+      const attemptTxnId = `${p.ref}_${String(nowMs()).slice(-6)}`;
+
       const sale = await initiateIciciSale({
         amount: p.amount_paise / 100,
-        transactionId: p.ref,
+        transactionId: attemptTxnId,
         customerName: u.name || 'Aurum Customer',
         customerMobile: u.phone || '9999999999',
         returnUrl,
         udf1: String(p.enrolment_id),
         udf2: p.product,
+        udf3: p.ref,
       });
 
       if (!sale.success || !sale.redirectUrl) {
-        return fail(res, 502, sale.error || sale.rawResponse?.responseMessage || 'ICICI Gateway initialization failed');
+        const errMsg = sale.error || sale.rawResponse?.responseDescription || sale.rawResponse?.responseMessage || 'ICICI Gateway initialization failed';
+        return fail(res, 502, errMsg);
       }
       res.json(sale);
     } catch (err) {
@@ -971,7 +976,8 @@ export function createApp(db = openDb()) {
   app.all(['/api/payments/icici/response', '/payment/response'], (req, res) => {
     const data = { ...req.query, ...req.body };
     const txnStatus = String(data.TxnStatus || data.txnStatus || data.status || '').toUpperCase();
-    const ref = String(data.merchantTxnNo || data.merchantTxnId || data.transactionId || data.originalTxnNo || '').trim();
+    const rawRef = String(data.merchantTxnNo || data.merchantTxnId || data.transactionId || data.originalTxnNo || '').trim();
+    const ref = rawRef.includes('_') ? rawRef.split('_')[0] : rawRef;
     const utr = String(data.TxnRefNo || data.bankRrn || data.rrn || data.utr || '').trim();
 
     const isSuccess = /SUCCESS|^S$|^00$/i.test(txnStatus);
