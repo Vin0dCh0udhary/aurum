@@ -5,9 +5,9 @@
   "type": "module",
   "description": "MVP: jeweller gold/silver advance-purchase scheme (web). Jeweller + customer journeys, ledger, live rates, UPI intent payments.",
   "scripts": {
-    "start": "node server.js",
-    "dev": "DEV=1 MOCK_RATES=1 node server.js",
-    "test": "node --test --no-warnings"
+    "start": "node --experimental-sqlite server.js",
+    "dev": "DEV=1 MOCK_RATES=1 node --experimental-sqlite server.js",
+    "test": "node --experimental-sqlite --test --no-warnings"
   },
   "engines": { "node": "22.x" },
   "dependencies": { "express": "^4.19.2", "qrcode": "^1.5.4" }
