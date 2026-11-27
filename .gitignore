@@ -1,0 +1,21 @@
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# OS metadata
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Logs and environment
+*.log
+.env
+.env.local
+
+# SQLite temporary WAL files
+*.db-shm
+*.db-wal
+
+# ICICI bulky extracted directories
+ICICI_Python/extracted/
+ICICI_React_Native/extracted/

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Aurum · Jewellery Savings Platform</title>
+  <meta name="description" content="Digital jewellery savings platform for retail jewellers and customers.">
+  <meta name="theme-color" content="#eaf3e7">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=2.8">
+</head>
+<body>
+  <!-- Continuous Moving Live Commodity Ticker Stripe -->
+  <div class="ticker-stripe" id="top-ticker">
+    <div class="ticker-track" id="ticker-content">
+      <span class="ticker-item"><span class="ticker-dot gold"></span> 24K GOLD: ₹8,650/g</span>
+      <span class="ticker-item"><span class="ticker-dot gold"></span> 22K GOLD: ₹7,925/g</span>
+      <span class="ticker-item"><span class="ticker-dot gold"></span> 18K GOLD: ₹6,488/g</span>
+      <span class="ticker-item"><span class="ticker-dot silver"></span> 999 SILVER: ₹98.50/g</span>
+      <span class="ticker-item"><span class="ticker-badge">LIVE MCX</span> SPOT PARITY + DUTY + GST</span>
+      <span class="ticker-item"><span class="ticker-dot gold"></span> 24K GOLD: ₹8,650/g</span>
+      <span class="ticker-item"><span class="ticker-dot gold"></span> 22K GOLD: ₹7,925/g</span>
+      <span class="ticker-item"><span class="ticker-dot gold"></span> 18K GOLD: ₹6,488/g</span>
+      <span class="ticker-item"><span class="ticker-dot silver"></span> 999 SILVER: ₹98.50/g</span>
+      <span class="ticker-item"><span class="ticker-badge">LIVE MCX</span> SPOT PARITY + DUTY + GST</span>
+    </div>
+  </div>
+
+  <div class="site-wrapper">
+    <!-- Floating Frosted Glass Capsule Navigation Header -->
+    <header class="app-header" id="header-bar">
+      <div class="header-inner">
+        <div class="brand-group" id="btn-brand-home">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Aurum</span>
+          </div>
+        </div>
+
+        <nav class="desktop-nav-links" id="desktop-nav">
+          <button class="nav-link active" data-tab="home">Dashboard</button>
+          <button class="nav-link" data-tab="schemes">Plans</button>
+          <button class="nav-link" data-tab="rates">Live Rates</button>
+          <button class="nav-link" data-tab="ledger">Passbook</button>
+          <button class="nav-link" data-tab="profile">Profile</button>
+        </nav>
+
+        <div class="header-actions">
+          <div class="showroom-status-pill" id="hdr-showroom-badge" style="display:none">
+            <span class="dot-pulse"></span>
+            <span id="hdr-showroom-name"></span>
+          </div>
+          <button class="nav-signout-btn" id="btn-logout" title="Sign Out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main View Content Area -->
+    <main id="app" class="app-main"></main>
+
+    <!-- Discreet Testing Clock Panel (Bottom - hidden) -->
+    <div id="dev" style="display:none !important"></div>
+
+    <!-- Mobile Bottom Navigation Bar (Hidden on Desktop) -->
+    <nav class="mobile-bottom-nav hidden" id="bottom-nav"></nav>
+  </div>
+
+  <!-- Global Floating Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Bottom Sheet / Modal Overlay -->
+  <div id="modal" class="modal-overlay hidden"></div>
+
+  <script src="app.js?v=2.8" type="module"></script>
+</body>
+</html>
