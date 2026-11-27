@@ -1203,21 +1203,6 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     const q = await api('POST', '/api/customer/pay', { enrolment_id: enrolmentId, amount_rupees: amount });
     const exp = Date.now() + q.quoteValidSeconds * 1000;
 
-    openModal(`
-    <h3 style="font-size:20px;font-weight:800;color:var(--ink-deep);margin-bottom:2px">Pay ${inr(q.amount)}</h3>
-    <div class="mute" style="font-size:12px;margin-bottom:16px">Direct Showroom VPA: <code style="color:var(--gold)">${esc(q.vpa)}</code></div>
-
-    <div class="rate-card-item" style="padding:16px;margin-bottom:16px;background:var(--bg-surface)">
-      <div>
-        <div style="font-size:11px;color:var(--ink-secondary)">Locked Rate Per Gram</div>
-        <div style="font-size:16px;font-weight:800;color:var(--ink-deep)">${inr(q.ratePerGram)}/g</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:11px;color:var(--ink-secondary)">Grams Credited</div>
-        <div style="font-size:18px;font-weight:800;color:var(--gold);font-family:var(--font-mono)">${g4(q.grams)}</div>
-      </div>
-    </div>
-
     const baseParams = `pa=${encodeURIComponent(q.vpa)}&pn=${encodeURIComponent('MANJU JEWELLERS')}&am=${Number(q.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(q.ref)}&tr=${encodeURIComponent(q.ref)}&mc=5944`;
     const phonepeUri = `phonepe://pay?${baseParams}`;
     const gpayUri = `gpay://upi/pay?${baseParams}`;
