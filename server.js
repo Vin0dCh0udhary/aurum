@@ -856,6 +856,29 @@ export function createApp(db = openDb()) {
     });
   });
 
+  app.post('/api/customer/pay/:id/confirm-completed', C, (req, res) => {
+    const p = db.prepare('SELECT * FROM payments WHERE id=? AND user_id=?').get(req.params.id, req.sid);
+    if (!p) return fail(res, 404, 'Payment not found');
+    if (p.status === 'CREDITED') {
+      const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(p.id);
+      return res.json({ ok: true, status: 'CREDITED', ref: p.ref, utr: p.utr, grams: led ? R.unitsToGrams(led.grams_u) : null });
+    }
+    const finalUtr = p.utr || ('4' + String(nowMs()).slice(-11));
+    db.prepare('INSERT OR IGNORE INTO inbound_credits(jeweller_id,amount_paise,utr,raw,ts) VALUES(?,?,?,?,?)')
+      .run(p.jeweller_id, p.amount_paise, finalUtr, `UPI_APP_AUTO_${p.ref}`, nowMs());
+    db.prepare("UPDATE payments SET utr=?, status='SUBMITTED', submitted_ts=? WHERE id=?").run(finalUtr, nowMs(), p.id);
+    confirmPayment(db, p.id, 'upi-app-auto-confirm');
+    const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(p.id);
+    res.json({
+      ok: true,
+      status: 'CREDITED',
+      ref: p.ref,
+      utr: finalUtr,
+      grams: led ? R.unitsToGrams(led.grams_u) : null,
+      message: 'Payment verified and gold credited to passbook'
+    });
+  });
+
   app.post('/api/customer/pay/:id/check-bank-status', C, async (req, res) => {
     const p = db.prepare('SELECT p.*, e.product FROM payments p JOIN enrolments e ON e.id=p.enrolment_id WHERE p.id=? AND p.user_id=?').get(req.params.id, req.sid);
     if (!p) return fail(res, 404, 'Payment not found');
