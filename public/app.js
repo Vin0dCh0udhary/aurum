@@ -1310,10 +1310,16 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
       </div>
     </div>
 
-    <!-- 100% Automated Confirmation (Zero Manual Intervention) -->
-    <button id="btn-auto-confirm" class="btn-save-advance" style="width:100%;padding:15px;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      I Have Completed Payment
+    <!-- ICICI Official Gateway Checkout Button (Real-time Bank Verification) -->
+    <button id="btn-icici-gateway" class="btn-save-advance" style="width:100%;padding:14px;font-size:14px;font-weight:800;background:linear-gradient(135deg, #054c8c, #0b69bc);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+      Pay via ICICI Bank Official Gateway
+    </button>
+
+    <!-- Query Bank Status Button (No Mock, Real Bank Switch Check) -->
+    <button id="btn-auto-confirm" class="tray-btn ghost" style="width:100%;padding:13px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      Check Bank Settlement Status
     </button>
     `);
 
@@ -1360,39 +1366,53 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
       } catch {}
     }, 1500);
 
-    // 100% Automated Confirmation (Zero Manual Intervention)
+    // ICICI Bank Hosted Gateway Launch (Real Bank Switch)
+    $m('#btn-icici-gateway')?.addEventListener('click', guard(async () => {
+      const btn = $m('#btn-icici-gateway');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="dot-pulse"></span> Connecting ICICI Bank Gateway...`;
+      try {
+        const res = await api('POST', `/api/customer/pay/${q.id}/icici-checkout`);
+        if (res && res.redirectUrl) {
+          window.location.href = res.redirectUrl;
+          return;
+        }
+        toast('Could not connect to ICICI Gateway: ' + (res.error || 'Server error'), 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg> Pay via ICICI Bank Official Gateway`;
+        }
+      }
+    }));
+
+    // Real-Time Bank Status Verification (No Mocks, Live Bank Switch Query)
     const triggerAutoConfirm = async () => {
       const btn = $m('#btn-auto-confirm');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `<span class="dot-pulse"></span> Verifying Bank Settlement...`;
+        btn.innerHTML = `<span class="dot-pulse"></span> Querying Bank Switch...`;
       }
       try {
-        const res = await api('POST', `/api/customer/pay/${q.id}/confirm-completed`);
+        const res = await api('POST', `/api/customer/pay/${q.id}/check-bank-status`);
         if (res && res.status === 'CREDITED') {
           onConfirmedSuccess(res);
+        } else if (res && (res.status === 'REJECTED' || res.status === 'FAILED')) {
+          toast(res.message || 'Payment declined or cancelled by bank', 'error');
         } else {
-          toast('Bank callback still processing. Will auto-update as soon as bank settles.', 'info');
+          toast(res.message || 'Bank callback pending. Will update when bank confirms.', 'info');
         }
       } catch (err) {
         toast(err.message || 'Error checking status', 'error');
       } finally {
         if ($m('#btn-auto-confirm')) {
           $m('#btn-auto-confirm').disabled = false;
-          $m('#btn-auto-confirm').innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> I Have Completed Payment`;
+          $m('#btn-auto-confirm').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg> Check Bank Settlement Status`;
         }
       }
     };
 
     $m('#btn-auto-confirm')?.addEventListener('click', guard(triggerAutoConfirm));
-
-    // When the customer switches back from PhonePe/Google Pay back into Aurum, auto-verify!
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        triggerAutoConfirm();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
   };
 
   if (directLock && defAmt) {

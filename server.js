@@ -856,29 +856,6 @@ export function createApp(db = openDb()) {
     });
   });
 
-  app.post('/api/customer/pay/:id/confirm-completed', C, (req, res) => {
-    const p = db.prepare('SELECT * FROM payments WHERE id=? AND user_id=?').get(req.params.id, req.sid);
-    if (!p) return fail(res, 404, 'Payment not found');
-    if (p.status === 'CREDITED') {
-      const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(p.id);
-      return res.json({ ok: true, status: 'CREDITED', ref: p.ref, utr: p.utr, grams: led ? R.unitsToGrams(led.grams_u) : null });
-    }
-    const finalUtr = p.utr || ('4' + String(nowMs()).slice(-11));
-    db.prepare('INSERT OR IGNORE INTO inbound_credits(jeweller_id,amount_paise,utr,raw,ts) VALUES(?,?,?,?,?)')
-      .run(p.jeweller_id, p.amount_paise, finalUtr, `UPI_APP_AUTO_${p.ref}`, nowMs());
-    db.prepare("UPDATE payments SET utr=?, status='SUBMITTED', submitted_ts=? WHERE id=?").run(finalUtr, nowMs(), p.id);
-    confirmPayment(db, p.id, 'upi-app-auto-confirm');
-    const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(p.id);
-    res.json({
-      ok: true,
-      status: 'CREDITED',
-      ref: p.ref,
-      utr: finalUtr,
-      grams: led ? R.unitsToGrams(led.grams_u) : null,
-      message: 'Payment verified and gold credited to passbook'
-    });
-  });
-
   app.post('/api/customer/pay/:id/check-bank-status', C, async (req, res) => {
     const p = db.prepare('SELECT p.*, e.product FROM payments p JOIN enrolments e ON e.id=p.enrolment_id WHERE p.id=? AND p.user_id=?').get(req.params.id, req.sid);
     if (!p) return fail(res, 404, 'Payment not found');
@@ -895,7 +872,16 @@ export function createApp(db = openDb()) {
       });
     }
 
-    // Check if an inbound bank credit matched this payment's ref
+    if (p.status === 'REJECTED' || p.status === 'FAILED') {
+      return res.json({
+        ok: true,
+        status: p.status,
+        ref: p.ref,
+        message: p.note || 'Payment was declined or cancelled'
+      });
+    }
+
+    // 1. Check if an inbound bank credit webhook arrived for this ref
     const credit = db.prepare("SELECT * FROM inbound_credits WHERE jeweller_id=? AND (utr=? OR raw LIKE ?)").get(p.jeweller_id, p.utr || '', `%${p.ref}%`);
     if (credit) {
       const finalUtr = credit.utr || p.utr || ('4' + String(nowMs()).slice(-11));
@@ -912,13 +898,14 @@ export function createApp(db = openDb()) {
       });
     }
 
-    // Direct ICICI Bank Command Status Enquiry API check
+    // 2. Direct ICICI Bank Command Status Enquiry API check (Real bank switch query)
     try {
       const iciciStatus = await checkIciciStatus({ transactionId: p.ref });
       if (iciciStatus?.data) {
         const d = iciciStatus.data;
-        const st = String(d.TxnStatus || d.txnStatus || d.status || '').toUpperCase();
-        if (/SUCCESS|^S$|^00$/i.test(st)) {
+        const st = String(d.TxnStatus || d.txnStatus || d.status || d.responseCode || '').toUpperCase();
+        const desc = d.respDescription || d.message || '';
+        if (/SUCCESS|^S$|^00$|R1000/i.test(st)) {
           const finalUtr = String(d.TxnRefNo || d.bankRrn || d.rrn || nowMs()).slice(-12);
           db.prepare("UPDATE payments SET utr=?, status='SUBMITTED', submitted_ts=? WHERE id=?").run(finalUtr, nowMs(), p.id);
           confirmPayment(db, p.id, 'icici-status-enquiry-api');
@@ -930,6 +917,14 @@ export function createApp(db = openDb()) {
             utr: finalUtr,
             grams: led ? R.unitsToGrams(led.grams_u) : null,
             message: 'Payment verified via ICICI Bank Status API'
+          });
+        } else if (/FAIL|DECLIN|REJECT|CANCEL|EXPIRED|P0031|P0032/i.test(st) || /cancel|failed|decline/i.test(desc)) {
+          db.prepare("UPDATE payments SET status='REJECTED', note=? WHERE id=?").run(`ICICI Bank: ${desc || st}`, p.id);
+          return res.json({
+            ok: true,
+            status: 'REJECTED',
+            ref: p.ref,
+            message: `Bank reported: ${desc || st}`
           });
         }
       }
