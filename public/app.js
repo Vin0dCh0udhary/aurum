@@ -1282,7 +1282,7 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     const q = await api('POST', '/api/customer/pay', { enrolment_id: enrolmentId, amount_rupees: amount });
     const exp = Date.now() + q.quoteValidSeconds * 1000;
 
-    const baseParams = `pa=${encodeURIComponent(q.vpa)}&pn=${encodeURIComponent('MANJU JEWELLERS')}&am=${Number(q.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(q.ref)}`;
+    const baseParams = `pa=${encodeURIComponent(q.vpa)}&pn=${encodeURIComponent(q.shopName || 'Manju Jewellers')}&am=${Number(q.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(q.ref)}`;
     const phonepeUri = `phonepe://pay?${baseParams}`;
     const gpayUri = `gpay://upi/pay?${baseParams}`;
     const paytmUri = `paytmmp://pay?${baseParams}`;
@@ -1293,7 +1293,7 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div>
         <h3 style="font-size:22px;font-weight:800;color:var(--ink-deep);margin:0">Pay ${inr(q.amount)}</h3>
-        <div class="mute" style="font-size:11.5px">Showroom: <b>MANJU JEWELLERS</b></div>
+        <div class="mute" style="font-size:11.5px">Pay to: <b>${esc(q.shopName || 'Manju Jewellers')}</b> (<code style="color:var(--forest)">${esc(q.vpa)}</code>)</div>
       </div>
       <div style="text-align:right">
         <span class="pill ok" style="font-size:11px">Rate Locked</span>
