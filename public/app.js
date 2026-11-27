@@ -1282,7 +1282,7 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     const q = await api('POST', '/api/customer/pay', { enrolment_id: enrolmentId, amount_rupees: amount });
     const exp = Date.now() + q.quoteValidSeconds * 1000;
 
-    const baseParams = `pa=${encodeURIComponent(q.vpa)}&pn=${encodeURIComponent(q.shopName || 'Manju Jewellers')}&am=${Number(q.amount).toFixed(2)}&cu=INR&tn=${encodeURIComponent(q.ref)}`;
+    const baseParams = `pa=${encodeURIComponent(q.vpa)}&pn=${encodeURIComponent(q.shopName || 'Mukesh Panwar')}&am=${Number(q.amount).toFixed(2)}&cu=INR`;
     const phonepeUri = `phonepe://pay?${baseParams}`;
     const gpayUri = `gpay://upi/pay?${baseParams}`;
     const paytmUri = `paytmmp://pay?${baseParams}`;
@@ -1379,14 +1379,25 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     </div>
 
     <!-- Copy UPI ID directly (For PhonePe "To UPI ID" transfer) -->
-    <div style="background:var(--bg-surface);border:1.5px solid var(--border-light);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <div style="overflow:hidden">
-        <div style="font-size:10px;color:var(--ink-secondary)">Pay via 'To UPI ID' in PhonePe / GPay</div>
-        <div style="font-size:13px;font-weight:800;color:var(--forest);font-family:var(--font-mono);word-break:break-all">${esc(q.vpa)}</div>
+    <div style="background:var(--bg-surface);border:1.5px solid var(--border-light);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="overflow:hidden">
+          <div style="font-size:10px;color:var(--ink-secondary)">Owner ICICI Bank UPI ID</div>
+          <div style="font-size:13px;font-weight:800;color:var(--forest);font-family:var(--font-mono)">${esc(q.vpa)}</div>
+        </div>
+        <button id="btn-copy-vpa" class="tray-btn ghost" style="padding:6px 12px;font-size:11px;font-weight:700;white-space:nowrap">
+          Copy
+        </button>
       </div>
-      <button id="btn-copy-vpa" class="tray-btn ghost" style="padding:6px 12px;font-size:11px;font-weight:700;white-space:nowrap">
-        Copy UPI ID
-      </button>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--border-card);padding-top:6px">
+        <div style="overflow:hidden">
+          <div style="font-size:10px;color:var(--ink-secondary)">Showroom ICICI Current A/C</div>
+          <div style="font-size:12px;font-weight:700;color:var(--ink-deep);font-family:var(--font-mono)">MSMANJUJEWELLERS.eazypay@icici</div>
+        </div>
+        <button id="btn-copy-showroom-vpa" class="tray-btn ghost" style="padding:5px 10px;font-size:10.5px;white-space:nowrap">
+          Copy
+        </button>
+      </div>
     </div>
 
     <!-- Enter UTR if paid directly -->
@@ -1488,6 +1499,11 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     $m('#btn-copy-vpa')?.addEventListener('click', () => {
       navigator.clipboard.writeText(q.vpa).catch(() => {});
       toast(`Copied ${q.vpa}! In PhonePe/GPay: tap 'To UPI ID' and paste to pay.`, 'success');
+    });
+
+    $m('#btn-copy-showroom-vpa')?.addEventListener('click', () => {
+      navigator.clipboard.writeText('MSMANJUJEWELLERS.eazypay@icici').catch(() => {});
+      toast(`Copied MSMANJUJEWELLERS.eazypay@icici! In PhonePe/GPay: tap 'To UPI ID' and paste to pay.`, 'success');
     });
 
     // Manual UTR Submission fallback
