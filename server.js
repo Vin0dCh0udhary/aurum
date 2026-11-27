@@ -446,14 +446,14 @@ export function createApp(db = openDb()) {
   });
 
   // ICICI Bank Composite Pay / UPI Webhook Callback Endpoint
-  app.post(['/api/webhooks/bank/icici-composite-pay', '/api/webhooks/bank/upi'], (req, res) => {
+  app.post(['/api/webhooks/bank/icici-composite-pay', '/api/webhooks/bank/upi', '/api/webhooks/icici-eazypay'], (req, res) => {
     const b = req.body || {};
-    const ref = String(b['seq-no'] || b.tr || b['txn-id'] || b.ref || b.paymentRef || '').trim().toUpperCase();
-    const rawStatus = String(b.status || b['status-code'] || b.txnStatus || '').toUpperCase();
-    const rawAmt = b.amount ?? b.amt ?? b['txn-amount'];
-    const utr = String(b['bank-rrn'] || b.utr || b.rrn || b.bankRrn || '').trim();
+    const ref = String(b.Unique_Ref_Number || b['seq-no'] || b.tr || b['txn-id'] || b.ref || b.paymentRef || '').trim().toUpperCase();
+    const rawStatus = String(b.Response_Code || b.status || b['status-code'] || b.txnStatus || '').toUpperCase();
+    const rawAmt = b.Transaction_Amount ?? b.amount ?? b.amt ?? b['txn-amount'];
+    const utr = String(b.Bank_Reference_Number || b['bank-rrn'] || b.utr || b.rrn || b.bankRrn || '').trim();
 
-    if (!ref) return fail(res, 400, 'Missing seq-no / tr reference');
+    if (!ref) return fail(res, 400, 'Missing seq-no / Unique_Ref_Number reference');
     const pay = db.prepare('SELECT * FROM payments WHERE ref=?').get(ref);
     if (!pay) return fail(res, 404, `Payment with ref ${ref} not found`);
 
@@ -462,7 +462,7 @@ export function createApp(db = openDb()) {
       return res.json({ status: 'SUCCESS', responseCode: '00', message: 'Payment already settled', ref: pay.ref, utr: pay.utr, grams: led ? R.unitsToGrams(led.grams_u) : null });
     }
 
-    const isSuccess = ['SUCCESS', 'COMPLETED', 'PAID', 'OK', '00'].includes(rawStatus);
+    const isSuccess = ['SUCCESS', 'COMPLETED', 'PAID', 'OK', '00', 'E000'].includes(rawStatus) || String(b.TPS || '').toUpperCase() === 'Y';
     if (!isSuccess) {
       db.prepare("UPDATE payments SET status='REJECTED', note=? WHERE id=?").run(`Bank reported: ${rawStatus || 'FAILED'}`, pay.id);
       logAudit(db, { actorType: 'BANK_WEBHOOK', action: 'BANK_PAYMENT_REJECTED', targetType: 'PAYMENT', targetId: pay.id, details: { rawStatus, ref } });
@@ -1007,7 +1007,7 @@ export function createApp(db = openDb()) {
       grams: R.unitsToGrams(r.grams_u), balanceGrams: R.unitsToGrams(r.balance_u), utr: r.utr, note: r.note, hash: r.hash.slice(0, 10), fullHash: r.hash };
   };
 
-  app.get('/api/customer/ledger', C, (req, res) => {
+  app.all('/api/customer/ledger', C, (req, res) => {
     res.json(db.prepare('SELECT * FROM ledger WHERE user_id=? ORDER BY id DESC').all(req.sid).map(ledgerView));
   });
 
