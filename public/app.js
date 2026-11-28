@@ -1431,10 +1431,22 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
       if (el) el.textContent = s; else clearInterval(iv);
     }, 1000);
 
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        api('GET', `/api/customer/pay/${q.id}`).then((st) => {
+          if (st && st.status === 'CREDITED') onConfirmedSuccess(st);
+        }).catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    let successShown = false;
     const onConfirmedSuccess = (r) => {
+      if (successShown) return;
+      successShown = true;
       clearInterval(iv);
       if (pollIv) clearInterval(pollIv);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
+      try { document.removeEventListener('visibilitychange', onVisibilityChange); } catch {}
       openModal(`
         <div style="text-align:center;padding:24px 14px">
           <div style="width:56px;height:56px;border-radius:50%;background:var(--emerald-bg);border:1px solid var(--emerald-border);display:flex;align-items:center;justify-content:center;color:var(--emerald);margin:0 auto 16px">
