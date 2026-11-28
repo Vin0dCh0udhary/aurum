@@ -1382,7 +1382,7 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     <div style="background:var(--bg-surface);border:1.5px solid var(--border-light);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <div style="overflow:hidden">
-          <div style="font-size:10px;color:var(--ink-secondary)">Owner ICICI Bank UPI ID</div>
+          <div style="font-size:10px;color:var(--ink-secondary)">Manju Jewellers ICICI EazyPay UPI ID</div>
           <div style="font-size:13px;font-weight:800;color:var(--forest);font-family:var(--font-mono)">${esc(q.vpa)}</div>
         </div>
         <button id="btn-copy-vpa" class="tray-btn ghost" style="padding:6px 12px;font-size:11px;font-weight:700;white-space:nowrap">
@@ -1391,8 +1391,8 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px dashed var(--border-card);padding-top:6px">
         <div style="overflow:hidden">
-          <div style="font-size:10px;color:var(--ink-secondary)">Showroom ICICI Current A/C</div>
-          <div style="font-size:12px;font-weight:700;color:var(--ink-deep);font-family:var(--font-mono)">MSMANJUJEWELLERS.eazypay@icici</div>
+          <div style="font-size:10px;color:var(--ink-secondary)">Alternate (Owner Personal VPA)</div>
+          <div style="font-size:12px;font-weight:700;color:var(--ink-deep);font-family:var(--font-mono)">panwarmukesh1823@ybl</div>
         </div>
         <button id="btn-copy-showroom-vpa" class="tray-btn ghost" style="padding:5px 10px;font-size:10.5px;white-space:nowrap">
           Copy
@@ -1502,8 +1502,8 @@ async function payFlow(enrolmentId, defAmt, directLock = false) {
     });
 
     $m('#btn-copy-showroom-vpa')?.addEventListener('click', () => {
-      navigator.clipboard.writeText('MSMANJUJEWELLERS.eazypay@icici').catch(() => {});
-      toast(`Copied MSMANJUJEWELLERS.eazypay@icici! In PhonePe/GPay: tap 'To UPI ID' and paste to pay.`, 'success');
+      navigator.clipboard.writeText('panwarmukesh1823@ybl').catch(() => {});
+      toast(`Copied panwarmukesh1823@ybl! In PhonePe/GPay: tap 'To UPI ID' and paste to pay.`, 'success');
     });
 
     // Manual UTR Submission fallback

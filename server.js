@@ -454,9 +454,24 @@ export function createApp(db = openDb()) {
       const rawAmt = b.Transaction_Amount ?? b.amount ?? b.amt ?? b['txn-amount'];
       const utr = String(b.Bank_Reference_Number || b['bank-rrn'] || b.utr || b.rrn || b.bankRrn || '').trim();
 
-      if (!ref) return fail(res, 400, 'Missing seq-no / Unique_Ref_Number reference');
-      const pay = db.prepare('SELECT * FROM payments WHERE ref=?').get(ref);
-      if (!pay) return fail(res, 404, `Payment with ref ${ref} not found`);
+      let pay = ref ? db.prepare('SELECT * FROM payments WHERE ref=?').get(ref) : null;
+      if (!pay && utr) {
+        pay = db.prepare("SELECT * FROM payments WHERE utr=? AND status IN ('CREATED','SUBMITTED')").get(utr);
+      }
+      if (!pay && rawAmt) {
+        const amtPaise = Math.round(Number(rawAmt) * 100);
+        pay = db.prepare("SELECT * FROM payments WHERE amount_paise=? AND status='CREATED' AND created_ts>=? ORDER BY id DESC LIMIT 1")
+          .get(amtPaise, nowMs() - 30 * 60000);
+      }
+
+      if (!pay) {
+        // Record inbound settlement even if reference was not pre-matched
+        const amtPaise = rawAmt ? Math.round(Number(rawAmt) * 100) : 0;
+        const fallbackUtr = utr && utr.length >= 10 ? utr : ('4' + String(nowMs()).slice(-11));
+        db.prepare('INSERT OR IGNORE INTO inbound_credits(jeweller_id,amount_paise,utr,raw,ts) VALUES(?,?,?,?,?)')
+          .run(2, amtPaise, fallbackUtr, JSON.stringify(b).slice(0, 500), nowMs());
+        return res.json({ status: 'RECEIVED', responseCode: '00', message: 'Inbound payment recorded. Pending customer match.', utr: fallbackUtr });
+      }
 
       if (pay.status === 'CREDITED') {
         const led = db.prepare('SELECT grams_u, rate_paise FROM ledger WHERE payment_id=?').get(pay.id);
